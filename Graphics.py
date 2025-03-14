@@ -39,11 +39,13 @@ class Graphics:
         text_surface = font.render(text, True, WHITE, BLUE)
         self.header_surf.blit(text_surface, pos)
 
-    def header_writing(self, env, epoch ):
+    def header_writing(self, env, epoch, chkpt = None ):
         self.write("Level: " + str(env.level), (200, 20))
         self.write( "epoch: " + str (epoch), (400, 20))
         self.write( f"Score: {env.score:.2f}", (200, 60))
         self.write( f'Ammunition: {env.spaceship.ammunition}',(400, 60))
+        if chkpt:
+            self.write("chkpt: " + str(chkpt), (10, 20))
 
     def tick(self):
         self.clock.tick(FPS)

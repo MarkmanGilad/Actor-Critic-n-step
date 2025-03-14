@@ -91,7 +91,7 @@ class Trainer:
                     else:
                         agent.learn(0.0)             # next state value is 0.0
                
-                self.graphics.header_writing(env=self.env, epoch=epoch)
+                self.graphics.header_writing(env=self.env, epoch=epoch, chkpt=chkpt)
                 self.graphics.update()
             
             self.save_checkpoint(epoch)
@@ -135,7 +135,7 @@ class Trainer:
             # f'total_loss: {self.agent.total_loss:.5f}',
             # f'actor_lr: {self.agent.actor.scheduler.get_last_lr()[0]:.5f} critic_lr: {self.agent.critic.scheduler.get_last_lr()[0]:.5f}',
             f'score: {self.env.score} level: {self.env.level}',
-            # f'entropy_coefficient: {self.agent.entropy_coefficient:.4f}',
+            f'entropy_coefficient: {self.agent.entropy_coefficient:.4f}',
             f'sum_reward: {self.reward:.3f}'
             
         )

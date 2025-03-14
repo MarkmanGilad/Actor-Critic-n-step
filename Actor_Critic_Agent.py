@@ -257,8 +257,9 @@ class Actor_Critic_Agent:
                 self.actor.optimizer.step()
                 self.critic.optimizer.step()
         
-        self.wandb(values = val_arr.mean(), returns = returns.mean(), critic_losses= stat.mean(critic_losses),
-                   actor_losses=stat.mean(actor_losses), total_losses= stat.mean(total_losses), entropy= stat.mean(entropy))
+        self.wandb(values = val_arr.mean(), returns = returns.mean(), advantage=stat.mean(advantage), 
+                   critic_losses= stat.mean(critic_losses), actor_losses=stat.mean(actor_losses), 
+                   total_losses= stat.mean(total_losses), entropy= stat.mean(entropy))
         self.critic.scheduler.step()
         self.actor.scheduler.step()
 
