@@ -2,8 +2,6 @@ import pygame
 from CONSTANTS import *
 from Human_Agent import Human_Agent
 from Environment import Environment
-from DQN_Agent import DQN_Agent
-from ActorCritic_Agent import ActorCriticAgent
 from Graphics import Graphics
 
 def main ():
