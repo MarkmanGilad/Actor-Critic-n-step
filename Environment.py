@@ -56,14 +56,15 @@ class Environment:
             self.score = 0
             self.level = 1
             self.enemy_Group = self.make_enemy_group()
+            self.spaceship.ammunition = MAX_AMMUNITION
+            self.bullets_Group.empty()
         else:
             self.level += 1
             Enemy.shoots_factor += add_shoot_factor
             self.enemy_Group = self.make_enemy_group(speed= int(ENEMY_START_SPEED + self.level/2))
         
-        self.spaceship.ammunition = MAX_AMMUNITION
-        self.bullets_Group.empty()
-        self.enemy_bullets_Group.empty()    
+        self.enemy_bullets_Group.empty()        
+        
         
     def move (self, action):
         reward = 0
