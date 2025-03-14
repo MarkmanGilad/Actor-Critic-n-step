@@ -87,16 +87,17 @@ class Environment:
             self.restart(add_speed=1, add_shoot_factor=0.1, new_game=False)
         self.score += hits
         
-
         done = self.is_end_of_Game()
         if done:
-            reward -= 5
+            reward -= .5
         return reward, done
     
     def is_end_of_stage (self):
         return len(self.enemy_Group) == 0
    
     def is_end_of_Game (self):
+        if self.spaceship.ammunition == 0:
+            return True
         enemy_landed = pygame.sprite.spritecollide(self.ground, self.enemy_Group, dokill=True)
         spaceship_hit = pygame.sprite.spritecollide(self.spaceship, self.enemy_bullets_Group, dokill=True, collided= pygame.sprite.collide_mask) 
         return len(enemy_landed) > 0 or len(spaceship_hit) > 0

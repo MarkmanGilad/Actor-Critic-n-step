@@ -130,6 +130,10 @@ class Actor_Critic_Agent:
         self.wandb = None   # will be updated by Trainer
         self.learn_step = 0 # counter for number of learning
         self.entropy_coefficient = 0.1
+        self.max_entropy_coeff = 0.1
+        self.min_entropy_coeff = 0.01
+        self.entropy_decay_rate = 0.995
+
 
         self.actor = ActorNetwork(input_dims, n_actions, self.lr_actor, chkpt=chkpt, optim_step=self.optim_step, 
                                   optim_gamma=self.optim_gamma, logger=self.logger)
@@ -205,9 +209,10 @@ class Actor_Critic_Agent:
         critic_losses = []  # for logging
         total_losses = []   # for logging
         entropy = []        # for logging
-
+        self.learn_step += 1
         state_arr, action_arr, val_arr, reward_arr, done_arr = self.memory.get_arrays()
-        
+        # entropy coefficient decay
+        self.entropy_coefficient = max(self.min_entropy_coeff, self.entropy_coefficient * self.entropy_decay_rate)
         # Compute advantage and returns
         advantage, returns = self.calculate_advantage_and_returns(reward_arr, val_arr, done_arr, next_val)
 
