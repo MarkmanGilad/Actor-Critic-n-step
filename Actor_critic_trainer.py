@@ -28,7 +28,7 @@ class Trainer:
         self.agent.wandb = self.wandb
 
     def init_params(self):
-        self.n_steps = 128
+        self.n_steps = 64
         self.epochs = 100000
         self.start_epoch = 1
         self.step = 0
@@ -144,10 +144,11 @@ class Trainer:
         print(
             f'chkpt: {self.chkpt} epoch: {epoch} moves: {self.moves} ',
             f'score: {self.env.score} level: {self.env.level} ',
-            f'entropy_coefficient: {self.agent.entropy_coefficient:.4f} ',
+            f'entropy_coe: {self.agent.entropy_coefficient:.4f} ',
             f'sum_reward: {self.reward:.3f} '
-            f'ammunition left: {self.env.spaceship.ammunition} '
-
+            f'ammu left: {self.env.spaceship.ammunition} ',
+            f'actor_LR: {self.agent.actor.scheduler.get_last_lr()[0]:.5f} '
+            f'critic_LR: {self.agent.critic.scheduler.get_last_lr()[0]:.5f} '
             
         )
         # self.logger.log('actor_loss', self.agent.actor_loss)

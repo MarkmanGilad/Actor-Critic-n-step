@@ -12,8 +12,8 @@ def main ():
     env = Environment(surface=graphics.main_surf)
     graphics.blit()
 
-    # player = Human_Agent()
-    player = Random_Agent()
+    player = Human_Agent()
+    # player = Random_Agent()
     # player = ActorCriticAgent(player=1)
 
     # Main Loop

@@ -120,10 +120,10 @@ class Actor_Critic_Agent:
     def __init__(self, chkpt, input_dims=88, n_actions=4, logger=None, wandb = None):
         self.gamma = 0.995
         self.n_epochs = 2
-        self.batch_size = 32
+        self.batch_size = 16
         self.lr_actor = 5e-4
         self.lr_critic = 5e-4
-        self.optim_step = 10000
+        self.optim_step = 1000
         self.optim_gamma = 0.95
         self.critic_actor_ratio = 0.5
         self.logger = logger
@@ -131,7 +131,7 @@ class Actor_Critic_Agent:
         self.learn_step = 0 # counter for number of learning
         self.entropy_coefficient = 0.1
         self.max_entropy_coeff = 0.1
-        self.min_entropy_coeff = 0.03
+        self.min_entropy_coeff = 0.05
         self.entropy_decay_rate = 0.9995
 
 

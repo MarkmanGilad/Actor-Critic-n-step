@@ -1,6 +1,6 @@
 import pygame
 from CONSTANTS import *
-from Bullet import Bullet
+from Bullet import Ship_bullet as Bullet
 
 class SpaceShip (pygame.sprite.Sprite):
     def __init__(self, img_Url, pos, bullets_Group) -> None:

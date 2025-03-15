@@ -6,8 +6,7 @@ from CONSTANTS import *
 from SpaceShip import SpaceShip
 from Enemy import Enemy
 from Ground import Ground
-import random
-
+from Bullet import Bullet, Enemy_bullet, Ship_bullet
 
 class Environment:
     def __init__(self, surface) -> None:
@@ -26,13 +25,13 @@ class Environment:
         self.init_reward()
 
     def init_reward(self):
-        self.hit_reward = 10
-        self.stage_reward = 5
-        self.done_reward = -1
-        self.zero_ammunition_reward = -0.1
+        self.hit_reward = 1
+        self.stage_reward = 10
+        self.done_reward = -2
+        self.zero_ammunition_reward = -0
         self.shoot_reward = -0.01
-        self.survival_reward = 0
-        self.misile_above_reward = -1
+        self.survival_reward = 0.00
+        self.misile_above_reward = -0.5
 
     def make_enemy_group (self, row=ENEMY_ROWS, col=ENEMY_COLS, space_row = 80, space_col = 120, speed = ENEMY_START_SPEED):
         enemy_Group = pygame.sprite.Group()
@@ -65,15 +64,20 @@ class Environment:
             Enemy.shoots_factor = ENEMY_SHOOTS_FACTOR
             self.score = 0
             self.level = 1
+            Enemy.clear_state_index()
             self.enemy_Group = self.make_enemy_group()
             self.spaceship.ammunition = MAX_AMMUNITION
+            Ship_bullet.clear_state_index()
             self.bullets_Group.empty()
+
         else:
             self.level += 1
             Enemy.shoots_factor += add_shoot_factor
+            Enemy.clear_state_index()
             self.enemy_Group = self.make_enemy_group(speed= int(ENEMY_START_SPEED + self.level/2))
         
-        self.enemy_bullets_Group.empty()        
+        self.enemy_bullets_Group.empty()
+        Enemy_bullet.clear_state_index()     
         
     def move (self, action):
         reward = 0
@@ -92,14 +96,14 @@ class Environment:
         hits = self.hits()
         reward +=  hits * self.hit_reward
         missile_dis = self.closest_enemy_missile_y_distance()
-        if missile_dis > 0:
-            reward += missile_dis * self.misile_above_reward
-
+        if 0.3 > missile_dis > 0:
+            reward += (1-missile_dis) * self.misile_above_reward
+        
         if self.is_end_of_stage():
             reward += self.stage_reward
             self.restart(add_speed=1, add_shoot_factor=0.1, new_game=False)
-        self.score += hits
         
+        self.score += hits
         done = self.is_end_of_Game()
         if done:
             reward += self.done_reward
@@ -174,31 +178,33 @@ class Environment:
 
         state_list = []
         # 0 - 53
-        for sprite in self.enemy_Group:
-            state_list.append(normX(sprite.rect.centerx-spaceshipX))
-            state_list.append(normY(sprite.rect.centery-spaceshipY))
-            state_list.append(normS(sprite.speed_x))
-        for i in range(enemy_ships-len(self.enemy_Group)):
-            state_list.append(0)
-            state_list.append(0)
-            state_list.append(0)
+        for sprite in Enemy.state_index:
+            if sprite:
+                state_list.append(normX(sprite.rect.centerx-spaceshipX))
+                state_list.append(normY(sprite.rect.centery-spaceshipY))
+                state_list.append(normS(sprite.speed_x))
+            else:
+                state_list.extend([0,0,0])
         state_list.append(normS(Enemy.speed_y))                    # 54
-        for sprite in self.enemy_bullets_Group:             # 55 - 74
-            state_list.append(normX(sprite.rect.centerx-spaceshipX))
-            state_list.append(normY(sprite.rect.centery-spaceshipY))
-        for i in range(enemy_bullets-len(self.enemy_bullets_Group)):
-            state_list.append(0)
-            state_list.append(0)
+
+        for sprite in Enemy_bullet.state_index:             # 55 - 74
+            if sprite:
+                state_list.append(normX(sprite.rect.centerx-spaceshipX))
+                state_list.append(normY(sprite.rect.centery-spaceshipY))
+            else:
+                state_list.extend([0,0])
+        
         state_list.append(normS(ENEMY_BULLET_SPEED))               # 75
         state_list.append(normX(self.spaceship.rect.centerx))      # 76
         state_list.append(normY(self.spaceship.rect.centery))      # 77
         state_list.append(normS(SPACESHIP_SPEED))                  # 78
-        for sprite in self.bullets_Group:                   # 79 - 84
-            state_list.append(normX(sprite.rect.centerx-spaceshipX))
-            state_list.append(normY(sprite.rect.centery-spaceshipY))
-        for i in range(SpaceShip_Bullets-len(self.bullets_Group)):
-            state_list.append(0)
-            state_list.append(0)
+        
+        for sprite in Ship_bullet.state_index:                   # 79 - 84
+            if sprite:
+                state_list.append(normX(sprite.rect.centerx-spaceshipX))
+                state_list.append(normY(sprite.rect.centery-spaceshipY))
+            else: 
+                state_list.extend([0,0])
         state_list.append(normS(SPACESHIP_BULLET_SPEED))           # 85
         state_list.append(self.spaceship.ammunition/MAX_AMMUNITION)        # 86
         state_list.append(self.level)                       # 87
