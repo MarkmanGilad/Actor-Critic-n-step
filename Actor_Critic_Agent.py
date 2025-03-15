@@ -87,7 +87,7 @@ class ActorNetwork(nn.Module):
         return [param for sublist in params for param in sublist]  # Flatten the nested lists
 
 class CriticNetwork(nn.Module):
-    def __init__(self, input_dims, lr, fc1_dims=256, fc2_dims=512, chkpt=1, optim_step = 100, optim_gamma = 0.9, weight_decay = 1e-4):
+    def __init__(self, input_dims, lr, fc1_dims=256, fc2_dims=512, chkpt=1, optim_step = 100, optim_gamma = 0.9):
         super(CriticNetwork, self).__init__()
 
         self.checkpoint_file = f'Data/Critic{chkpt}.pth'
@@ -120,9 +120,9 @@ class Actor_Critic_Agent:
     def __init__(self, chkpt, input_dims=88, n_actions=4, logger=None, wandb = None):
         self.gamma = 0.995
         self.n_epochs = 2
-        self.batch_size = 16
-        self.lr_actor = 1e-3
-        self.lr_critic = 1e-3
+        self.batch_size = 32
+        self.lr_actor = 5e-4
+        self.lr_critic = 5e-4
         self.optim_step = 10000
         self.optim_gamma = 0.95
         self.critic_actor_ratio = 0.5
@@ -131,7 +131,7 @@ class Actor_Critic_Agent:
         self.learn_step = 0 # counter for number of learning
         self.entropy_coefficient = 0.1
         self.max_entropy_coeff = 0.1
-        self.min_entropy_coeff = 0.01
+        self.min_entropy_coeff = 0.03
         self.entropy_decay_rate = 0.9995
 
 

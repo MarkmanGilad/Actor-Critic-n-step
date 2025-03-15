@@ -28,7 +28,7 @@ class Trainer:
         self.agent.wandb = self.wandb
 
     def init_params(self):
-        self.n_steps = 64
+        self.n_steps = 128
         self.epochs = 100000
         self.start_epoch = 1
         self.step = 0
@@ -60,12 +60,17 @@ class Trainer:
                 "optim_gamma":self.agent.optim_gamma,
                 'remark': remark,  
                 'critic_actor_ratio': self.agent.critic_actor_ratio,
-                "entropy_coefficient":self.agent.entropy_coefficient, 
                 "hit_reward":self.env.hit_reward,
                 "stage_reward":self.env.stage_reward,
                 "done_reward": self.env.done_reward,
                 "zero_ammunition_reward":self.env.zero_ammunition_reward,
                 "shoot_reward":self.env.shoot_reward,
+                "survival_reward":self.env.survival_reward,
+                "misile_above_reward":self.env.misile_above_reward,
+                "entropy_coefficient":self.agent.entropy_coefficient, 
+                "max_entropy_coeff":self.agent.max_entropy_coeff,
+                "min_entropy_coeff":self.agent.min_entropy_coeff,
+                "entropy_decay_rate":self.agent.entropy_decay_rate,
                 }
         return WandB(project_name, self.chkpt, config, self.resume_wandb)
 

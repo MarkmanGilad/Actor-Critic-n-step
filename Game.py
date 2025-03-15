@@ -1,6 +1,7 @@
 import pygame
 from CONSTANTS import *
 from Human_Agent import Human_Agent
+from Random_Agent import Random_Agent
 from Environment import Environment
 from Graphics import Graphics
 
@@ -11,8 +12,8 @@ def main ():
     env = Environment(surface=graphics.main_surf)
     graphics.blit()
 
-    player = Human_Agent()
-    # player = DQN_Agent(parametes_path=None, train=False)
+    # player = Human_Agent()
+    player = Random_Agent()
     # player = ActorCriticAgent(player=1)
 
     # Main Loop

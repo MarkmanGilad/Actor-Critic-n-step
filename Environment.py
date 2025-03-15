@@ -26,15 +26,17 @@ class Environment:
         self.init_reward()
 
     def init_reward(self):
-        self.hit_reward = 1
+        self.hit_reward = 10
         self.stage_reward = 5
         self.done_reward = -1
-        self.zero_ammunition_reward = -0
-        self.shoot_reward = -0
+        self.zero_ammunition_reward = -0.1
+        self.shoot_reward = -0.01
+        self.survival_reward = 0
+        self.misile_above_reward = -1
 
     def make_enemy_group (self, row=ENEMY_ROWS, col=ENEMY_COLS, space_row = 80, space_col = 120, speed = ENEMY_START_SPEED):
         enemy_Group = pygame.sprite.Group()
-        row , col = 3 , 6
+        # row , col = 3 , 6
         for r in range (row):
             for c in range (col):
                 enemy_Group.add(Enemy(self.enemy_img, (c * space_col, r * space_row, ), self.enemy_bullets_Group,speed=speed))
@@ -73,7 +75,6 @@ class Environment:
         
         self.enemy_bullets_Group.empty()        
         
-        
     def move (self, action):
         reward = 0
         if action == 1:
@@ -90,6 +91,10 @@ class Environment:
         self.draw()
         hits = self.hits()
         reward +=  hits * self.hit_reward
+        missile_dis = self.closest_enemy_missile_y_distance()
+        if missile_dis > 0:
+            reward += missile_dis * self.misile_above_reward
+
         if self.is_end_of_stage():
             reward += self.stage_reward
             self.restart(add_speed=1, add_shoot_factor=0.1, new_game=False)
@@ -98,6 +103,8 @@ class Environment:
         done = self.is_end_of_Game()
         if done:
             reward += self.done_reward
+        else:
+            reward += self.survival_reward
         return reward, done
     
     def is_end_of_stage (self):
@@ -109,7 +116,29 @@ class Environment:
         enemy_landed = pygame.sprite.spritecollide(self.ground, self.enemy_Group, dokill=True)
         spaceship_hit = pygame.sprite.spritecollide(self.spaceship, self.enemy_bullets_Group, dokill=True, collided= pygame.sprite.collide_mask) 
         return len(enemy_landed) > 0 or len(spaceship_hit) > 0
-        
+
+    def is_enemy_missile_above(self):
+        SpaceShip_x = self.spaceship.rect.centerx
+        delta = 7.5
+        is_bullet_above = any(abs(sprite.rect.centerx - SpaceShip_x) <= delta for sprite in self.enemy_bullets_Group)
+        return is_bullet_above
+
+    def closest_enemy_missile_y_distance(self):
+        spaceship_x = self.spaceship.rect.centerx
+        spaceship_y = self.spaceship.rect.centery
+        delta_x = 7.5
+        # Calculate vertical distance for each missile within the horizontal delta
+        distances = [
+            spaceship_y - sprite.rect.centery
+            for sprite in self.enemy_bullets_Group
+            if abs(sprite.rect.centerx - spaceship_x) <= delta_x
+        ]
+        # Return the minimum distance if any missile qualifies, otherwise return None
+        if distances:
+            return min(distances)/MAIN_SURF_HEIGHT
+        else:
+            return 0
+
     def hits (self):
         collisions = pygame.sprite.groupcollide(self.enemy_Group, self.bullets_Group, True, True, pygame.sprite.collide_mask)
         return len(collisions)
@@ -133,7 +162,7 @@ class Environment:
         enemy_bullet_speed_y = 1                                # 1
         SpaceShip_pos_shape = 2                                 # 2
         SpaceShip_speed_x = 1                                   # 1
-        SpaceShip_Bullets = SPACE_SHIP_BURST                    # 3 * 2 = 6
+        SpaceShip_Bullets = 3                                   # 3 * 2 = 6
         SpaceShip_bullets_speed_y = 1                           # 1
         SpaceShip_ammunition = 1                                # 1
         level = 1                                               # 1
@@ -171,7 +200,7 @@ class Environment:
             state_list.append(0)
             state_list.append(0)
         state_list.append(normS(SPACESHIP_BULLET_SPEED))           # 85
-        state_list.append(self.spaceship.ammunition/100)        # 86
+        state_list.append(self.spaceship.ammunition/MAX_AMMUNITION)        # 86
         state_list.append(self.level)                       # 87
         # state_list.append(self.score)                       # 88
         return torch.tensor(state_list, dtype=torch.float32)
