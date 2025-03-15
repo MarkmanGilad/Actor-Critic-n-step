@@ -140,11 +140,14 @@ class Environment:
         # score = 1                                             # 1
         # total = 88
         
+        spaceshipX = self.spaceship.rect.centerx
+        spaceshipY = self.spaceship.rect.centery
+
         state_list = []
         # 0 - 53
         for sprite in self.enemy_Group:
-            state_list.append(normX(sprite.rect.centerx))
-            state_list.append(normY(sprite.rect.centery))
+            state_list.append(normX(sprite.rect.centerx-spaceshipX))
+            state_list.append(normY(sprite.rect.centery-spaceshipY))
             state_list.append(normS(sprite.speed_x))
         for i in range(enemy_ships-len(self.enemy_Group)):
             state_list.append(0)
@@ -152,18 +155,18 @@ class Environment:
             state_list.append(0)
         state_list.append(normS(Enemy.speed_y))                    # 54
         for sprite in self.enemy_bullets_Group:             # 55 - 74
-            state_list.append(normX(sprite.rect.centerx))
-            state_list.append(normY(sprite.rect.centery))
+            state_list.append(normX(sprite.rect.centerx-spaceshipX))
+            state_list.append(normY(sprite.rect.centery-spaceshipY))
         for i in range(enemy_bullets-len(self.enemy_bullets_Group)):
             state_list.append(0)
             state_list.append(0)
         state_list.append(normS(ENEMY_BULLET_SPEED))               # 75
-        state_list.append(normX(self.spaceship.rect.centerx))      # 76
-        state_list.append(normY(self.spaceship.rect.centery))      # 77
+        state_list.append(normX(self.spaceship.rect.centerx-spaceshipX))      # 76
+        state_list.append(normY(self.spaceship.rect.centery-spaceshipY))      # 77
         state_list.append(normS(SPACESHIP_SPEED))                  # 78
         for sprite in self.bullets_Group:                   # 79 - 84
-            state_list.append(normX(sprite.rect.centerx))
-            state_list.append(normY(sprite.rect.centery))
+            state_list.append(normX(sprite.rect.centerx-spaceshipX))
+            state_list.append(normY(sprite.rect.centery-spaceshipY))
         for i in range(SpaceShip_Bullets-len(self.bullets_Group)):
             state_list.append(0)
             state_list.append(0)
