@@ -28,7 +28,7 @@ class Trainer:
         self.agent.wandb = self.wandb
 
     def init_params(self):
-        self.n_steps = 512
+        self.n_steps = 64
         self.epochs = 100000
         self.start_epoch = 1
         self.step = 0
@@ -61,7 +61,12 @@ class Trainer:
                 'remark': remark,  
                 'critic_actor_ratio': self.agent.critic_actor_ratio,
                 "entropy_coefficient":self.agent.entropy_coefficient, 
-            }
+                "hit_reward":self.env.hit_reward,
+                "stage_reward":self.env.stage_reward,
+                "done_reward": self.env.done_reward,
+                "zero_ammunition_reward":self.env.zero_ammunition_reward,
+                "shoot_reward":self.env.shoot_reward,
+                }
         return WandB(project_name, self.chkpt, config, self.resume_wandb)
 
     def train(self):
@@ -71,6 +76,7 @@ class Trainer:
             self.env.restart()
             done = False
             self.reward = 0
+            self.moves = 0
             state = self.env.state()        
             if self.env.level == 1:                 # clearing score after logging only when new_game
                 self.env.score = 0
@@ -83,6 +89,7 @@ class Trainer:
                 self.reward += reward        # for logging
                 agent.remember(state, action, log_prob, val, reward, done)
                 self.step += 1
+                self.moves += 1
                 state = self.env.state()
                 if self.step % self.n_steps == 0 or done:
                     if not done:                        # calculate next state value
@@ -130,13 +137,12 @@ class Trainer:
     def log_and_plot(self, epoch, log_epoch=1):
         
         print(
-            f'chkpt: {self.chkpt} epoch: {epoch}',
-            # f'actor_loss: {self.agent.actor_loss:.5f} critic_loss: {self.agent.critic_loss:.5f}',
-            # f'total_loss: {self.agent.total_loss:.5f}',
-            # f'actor_lr: {self.agent.actor.scheduler.get_last_lr()[0]:.5f} critic_lr: {self.agent.critic.scheduler.get_last_lr()[0]:.5f}',
-            f'score: {self.env.score} level: {self.env.level}',
-            f'entropy_coefficient: {self.agent.entropy_coefficient:.4f}',
-            f'sum_reward: {self.reward:.3f}'
+            f'chkpt: {self.chkpt} epoch: {epoch} moves: {self.moves} ',
+            f'score: {self.env.score} level: {self.env.level} ',
+            f'entropy_coefficient: {self.agent.entropy_coefficient:.4f} ',
+            f'sum_reward: {self.reward:.3f} '
+            f'ammunition left: {self.env.spaceship.ammunition} '
+
             
         )
         # self.logger.log('actor_loss', self.agent.actor_loss)

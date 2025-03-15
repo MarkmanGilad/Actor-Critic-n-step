@@ -120,9 +120,9 @@ class Actor_Critic_Agent:
     def __init__(self, chkpt, input_dims=88, n_actions=4, logger=None, wandb = None):
         self.gamma = 0.995
         self.n_epochs = 2
-        self.batch_size = 50
-        self.lr_actor = 1e-4
-        self.lr_critic = 1e-4
+        self.batch_size = 16
+        self.lr_actor = 1e-3
+        self.lr_critic = 1e-3
         self.optim_step = 10000
         self.optim_gamma = 0.95
         self.critic_actor_ratio = 0.5
@@ -132,7 +132,7 @@ class Actor_Critic_Agent:
         self.entropy_coefficient = 0.1
         self.max_entropy_coeff = 0.1
         self.min_entropy_coeff = 0.01
-        self.entropy_decay_rate = 0.995
+        self.entropy_decay_rate = 0.9995
 
 
         self.actor = ActorNetwork(input_dims, n_actions, self.lr_actor, chkpt=chkpt, optim_step=self.optim_step, 
@@ -211,6 +211,13 @@ class Actor_Critic_Agent:
         entropy = []        # for logging
         self.learn_step += 1
         state_arr, action_arr, val_arr, reward_arr, done_arr = self.memory.get_arrays()
+        
+        # skipping learning if too few samples
+        if len(state_arr) < 2:          
+            print(f"Skipping learning: only {len(state_arr)} samples, need at least 2")
+            self.memory.clear_memory()
+            return
+        
         # entropy coefficient decay
         self.entropy_coefficient = max(self.min_entropy_coeff, self.entropy_coefficient * self.entropy_decay_rate)
         # Compute advantage and returns
@@ -257,7 +264,7 @@ class Actor_Critic_Agent:
                 self.actor.optimizer.step()
                 self.critic.optimizer.step()
         
-        self.wandb(values = val_arr.mean(), returns = returns.mean(), advantage=stat.mean(advantage), 
+        self.wandb(values = val_arr.mean(), returns = returns.mean(), advantage=advantage.mean(), 
                    critic_losses= stat.mean(critic_losses), actor_losses=stat.mean(actor_losses), 
                    total_losses= stat.mean(total_losses), entropy= stat.mean(entropy))
         self.critic.scheduler.step()
