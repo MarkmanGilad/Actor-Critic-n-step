@@ -161,8 +161,8 @@ class Environment:
             state_list.append(0)
             state_list.append(0)
         state_list.append(normS(ENEMY_BULLET_SPEED))               # 75
-        state_list.append(normX(self.spaceship.rect.centerx-spaceshipX))      # 76
-        state_list.append(normY(self.spaceship.rect.centery-spaceshipY))      # 77
+        state_list.append(normX(self.spaceship.rect.centerx))      # 76
+        state_list.append(normY(self.spaceship.rect.centery))      # 77
         state_list.append(normS(SPACESHIP_SPEED))                  # 78
         for sprite in self.bullets_Group:                   # 79 - 84
             state_list.append(normX(sprite.rect.centerx-spaceshipX))
