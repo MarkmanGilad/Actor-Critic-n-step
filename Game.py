@@ -29,16 +29,18 @@ def main ():
         action = player.get_Action(events=events, state=env.state())
         reward, done = env.move(action=action)
         if done:
-            
-            graphics.write ("End Of Game - Score: " + str (env.score))
-            graphics.write ("Another Game ?  Y / N", pos=(300, 60))
-            
-            graphics.blit()
-            pygame.display.update()
-            if another_game():
-                env.restart()
+            if env.end_of_game:
+                graphics.write ("End Of Game - Score: " + str (env.score))
+                graphics.write ("Another Game ?  Y / N", pos=(300, 60))
+                
+                graphics.blit()
+                pygame.display.update()
+                if another_game():
+                    env.restart()
+                else:
+                    break
             else:
-                break
+                env.restart()
         graphics
         graphics.header_writing(env=env, epoch=None)
         graphics.update()

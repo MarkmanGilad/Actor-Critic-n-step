@@ -18,6 +18,7 @@ class Environment:
         self.enemy_img = pygame.transform.scale(self.enemy_img, (40, 40))
         self.enemy_Group = self.make_enemy_group()
         self.score = 0
+        self.end_of_game = True
         self.surface = surface
         self.level = 1
         self.ground = Ground()
@@ -25,13 +26,13 @@ class Environment:
         self.init_reward()
 
     def init_reward(self):
-        self.hit_reward = 1
-        self.stage_reward = 10
-        self.done_reward = -2
-        self.zero_ammunition_reward = -0
+        self.hit_reward = 2
+        self.stage_reward = 5
+        self.done_reward = -0.5
+        self.zero_ammunition_reward = 0
         self.shoot_reward = -0.01
         self.survival_reward = 0.00
-        self.misile_above_reward = -0.5
+        self.misile_above_reward = -0.3
 
     def make_enemy_group (self, row=ENEMY_ROWS, col=ENEMY_COLS, space_row = 80, space_col = 120, speed = ENEMY_START_SPEED):
         enemy_Group = pygame.sprite.Group()
@@ -55,8 +56,8 @@ class Environment:
         self.bullets_Group.draw(surface)
         self.enemy_bullets_Group.draw(surface)
 
-    def restart (self, add_speed = 0, add_shoot_factor = 0, new_game = True):
-                
+    def restart (self):
+        new_game = self.end_of_game        
         if new_game:
             # width =  random.randint(50, WIDTH-50)
             width = WIDTH // 2 - 30
@@ -69,15 +70,18 @@ class Environment:
             self.spaceship.ammunition = MAX_AMMUNITION
             Ship_bullet.clear_state_index()
             self.bullets_Group.empty()
-
+            self.enemy_bullets_Group.empty()
+            Enemy_bullet.clear_state_index()  
+            
         else:
             self.level += 1
-            Enemy.shoots_factor += add_shoot_factor
+            Enemy.shoots_factor = ENEMY_SHOOTS_FACTOR #+= 0.1 
             Enemy.clear_state_index()
-            self.enemy_Group = self.make_enemy_group(speed= int(ENEMY_START_SPEED + self.level/2))
+            self.enemy_Group = self.make_enemy_group() #(speed= int(ENEMY_START_SPEED + self.level/2))
+            self.enemy_bullets_Group.empty()
+            Enemy_bullet.clear_state_index()  
         
-        self.enemy_bullets_Group.empty()
-        Enemy_bullet.clear_state_index()     
+        self.end_of_game = False
         
     def move (self, action):
         reward = 0
@@ -96,19 +100,24 @@ class Environment:
         hits = self.hits()
         reward +=  hits * self.hit_reward
         missile_dis = self.closest_enemy_missile_y_distance()
-        if 0.3 > missile_dis > 0:
+        if 0.5 > missile_dis > 0:
             reward += (1-missile_dis) * self.misile_above_reward
-        
+        self.score += hits
+
         if self.is_end_of_stage():
             reward += self.stage_reward
-            self.restart(add_speed=1, add_shoot_factor=0.1, new_game=False)
+            # self.restart(add_speed=1, add_shoot_factor=0.1, new_game=False)
+            done = True
+            self.end_of_game = False
         
-        self.score += hits
-        done = self.is_end_of_Game()
-        if done:
+        elif self.is_end_of_Game():
             reward += self.done_reward
+            done=True
+            self.end_of_game = True
         else:
             reward += self.survival_reward
+            self.end_of_game = False
+            done=False
         return reward, done
     
     def is_end_of_stage (self):

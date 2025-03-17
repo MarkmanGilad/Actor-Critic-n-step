@@ -54,8 +54,9 @@ class ActorNetwork(nn.Module):
     def __init__(self, input_dims, n_actions, lr, fc1_dims=256, fc2_dims=512, chkpt=1, optim_step = 100, optim_gamma = 0.9, logger = None):
         super(ActorNetwork, self).__init__()
         self.fc1 = nn.Linear(input_dims, fc1_dims)
-        self.fc2 = nn.Linear(fc1_dims, fc1_dims)
-        self.fc3 = nn.Linear(fc1_dims, n_actions)
+        self.fc2 = nn.Linear(fc1_dims, fc2_dims)
+        self.fc3 = nn.Linear(fc2_dims, fc1_dims)
+        self.fc4 = nn.Linear(fc1_dims, n_actions)
         self.relu = nn.ReLU()
         self.leaky_relu = nn.LeakyReLU()
         
@@ -72,6 +73,8 @@ class ActorNetwork(nn.Module):
         x = self.fc2(x)
         x = self.relu(x)
         x = self.fc3(x)
+        x = self.relu(x)
+        x = self.fc4(x)
                 
         dist = Categorical(logits=x)
         return dist
@@ -92,8 +95,9 @@ class CriticNetwork(nn.Module):
 
         self.checkpoint_file = f'Data/Critic{chkpt}.pth'
         self.fc1 = nn.Linear(input_dims, fc1_dims)
-        self.fc2 = nn.Linear(fc1_dims, fc1_dims)
-        self.fc3 = nn.Linear(fc1_dims, 1)
+        self.fc2 = nn.Linear(fc1_dims, fc2_dims)
+        self.fc3 = nn.Linear(fc2_dims, fc1_dims)
+        self.fc4 = nn.Linear(fc1_dims, 1)
         self.relu = nn.ReLU()
         self.leaky_relu = nn.LeakyReLU()  
         
@@ -108,6 +112,8 @@ class CriticNetwork(nn.Module):
         x = self.fc2(x)
         x = self.relu(x)
         x = self.fc3(x)
+        x = self.relu(x)
+        x = self.fc4(x)
         return x
 
     def save_checkpoint(self):
@@ -121,9 +127,9 @@ class Actor_Critic_Agent:
         self.gamma = 0.995
         self.n_epochs = 2
         self.batch_size = 16
-        self.lr_actor = 5e-4
-        self.lr_critic = 5e-4
-        self.optim_step = 1000
+        self.lr_actor = 1e-4
+        self.lr_critic = 1e-4
+        self.optim_step = 5000
         self.optim_gamma = 0.95
         self.critic_actor_ratio = 0.5
         self.logger = logger
@@ -131,8 +137,8 @@ class Actor_Critic_Agent:
         self.learn_step = 0 # counter for number of learning
         self.entropy_coefficient = 0.1
         self.max_entropy_coeff = 0.1
-        self.min_entropy_coeff = 0.05
-        self.entropy_decay_rate = 0.9995
+        self.min_entropy_coeff = 0.02
+        self.entropy_decay_rate = 0.9996
 
 
         self.actor = ActorNetwork(input_dims, n_actions, self.lr_actor, chkpt=chkpt, optim_step=self.optim_step, 

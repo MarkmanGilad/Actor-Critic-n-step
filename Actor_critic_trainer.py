@@ -106,8 +106,9 @@ class Trainer:
                 self.graphics.header_writing(env=self.env, epoch=epoch, chkpt=chkpt)
                 self.graphics.update()
             
-            self.save_checkpoint(epoch)
-            self.log_and_plot(epoch)
+            if self.env.end_of_game:
+                self.save_checkpoint(epoch)
+                self.log_and_plot(epoch)
 
         pygame.quit()
 
@@ -142,13 +143,14 @@ class Trainer:
     def log_and_plot(self, epoch, log_epoch=1):
         
         print(
-            f'chkpt: {self.chkpt} epoch: {epoch} moves: {self.moves} ',
-            f'score: {self.env.score} level: {self.env.level} ',
-            f'entropy_coe: {self.agent.entropy_coefficient:.4f} ',
-            f'sum_reward: {self.reward:.3f} '
-            f'ammu left: {self.env.spaceship.ammunition} ',
-            f'actor_LR: {self.agent.actor.scheduler.get_last_lr()[0]:.5f} '
-            f'critic_LR: {self.agent.critic.scheduler.get_last_lr()[0]:.5f} '
+            f'chkpt: {self.chkpt} epoch: {epoch} moves: {self.moves}',
+            f'score: {self.env.score} level: {self.env.level}',
+            f'entropy_coe: {self.agent.entropy_coefficient:.4f}',
+            f'sum_reward: {self.reward:.3f}',
+            f'ammu left: {self.env.spaceship.ammunition}',
+            f'actor_LR: {self.agent.actor.scheduler.get_last_lr()[0]:.5f}',
+            f'critic_LR: {self.agent.critic.scheduler.get_last_lr()[0]:.5f}',
+            f'End_of_game: {self.env.end_of_game}',
             
         )
         # self.logger.log('actor_loss', self.agent.actor_loss)
