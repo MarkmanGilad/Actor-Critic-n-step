@@ -228,7 +228,6 @@ class Actor_Critic_Agent:
 
         for i in range(self.n_epochs):
             batches = self.memory.generate_batches()
-        
             for batch in batches:
                 states = T.tensor(state_arr[batch], dtype=T.float).to(self.actor.device)
                 actions = T.tensor(action_arr[batch]).to(self.actor.device)
