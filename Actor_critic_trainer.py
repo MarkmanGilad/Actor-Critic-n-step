@@ -83,7 +83,7 @@ class Trainer:
             self.reward = 0
             self.moves = 0
             state = self.env.state()        
-            if self.env.level == 1:                 # clearing score after logging only when new_game
+            if self.env.level == 1: # clearing score after logging only when new_game
                 self.env.score = 0
             while not done:
                 self.graphics.clear()

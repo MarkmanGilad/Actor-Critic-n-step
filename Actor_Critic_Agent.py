@@ -51,22 +51,20 @@ class Memory:
         self.vals = []
 
 class ActorNetwork(nn.Module):
-    def __init__(self, input_dims, n_actions, lr, fc1_dims=256, fc2_dims=512, chkpt=1, optim_step = 100, optim_gamma = 0.9, logger = None):
+    def __init__(self, input_dims, n_actions, lr, fc1_dims=256, fc2_dims=512, chkpt=1, optim_step = 100, optim_gamma = 0.9):
         super(ActorNetwork, self).__init__()
         self.fc1 = nn.Linear(input_dims, fc1_dims)
         self.fc2 = nn.Linear(fc1_dims, fc2_dims)
         self.fc3 = nn.Linear(fc2_dims, fc1_dims)
         self.fc4 = nn.Linear(fc1_dims, n_actions)
         self.relu = nn.ReLU()
-        self.leaky_relu = nn.LeakyReLU()
-        
+                
         self.checkpoint_file = f'Data/Actor{chkpt}.pth'
-        self.optimizer = optim.Adam(self.parameters(), lr=lr)       # without weight_decay
+        self.optimizer = optim.Adam(self.parameters(), lr=lr)       
         self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=optim_step, gamma=optim_gamma)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)
-        self.logger = logger
-
+        
     def forward(self, state):
         x = self.fc1(state)
         x = self.relu(x)
@@ -99,8 +97,7 @@ class CriticNetwork(nn.Module):
         self.fc3 = nn.Linear(fc2_dims, fc1_dims)
         self.fc4 = nn.Linear(fc1_dims, 1)
         self.relu = nn.ReLU()
-        self.leaky_relu = nn.LeakyReLU()  
-        
+                
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=optim_step, gamma=optim_gamma)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
@@ -123,7 +120,7 @@ class CriticNetwork(nn.Module):
         self.load_state_dict(T.load(self.checkpoint_file,weights_only=True))
 
 class Actor_Critic_Agent:
-    def __init__(self, chkpt, input_dims=88, n_actions=4, logger=None, wandb = None):
+    def __init__(self, chkpt, input_dims=88, n_actions=4, wandb = None):
         self.gamma = 0.995
         self.n_epochs = 2
         self.batch_size = 16
@@ -132,7 +129,6 @@ class Actor_Critic_Agent:
         self.optim_step = 5000
         self.optim_gamma = 0.95
         self.critic_actor_ratio = 0.5
-        self.logger = logger
         self.wandb = None   # will be updated by Trainer
         self.learn_step = 0 # counter for number of learning
         self.entropy_coefficient = 0.1
@@ -185,7 +181,6 @@ class Actor_Critic_Agent:
 
         # n-step return calculation
         future_return = next_val
-
         for t in reversed(range(len(reward_arr))):
             if done_arr[t]:
                 future_return = 0.0  # No bootstrap if episode ends
@@ -200,21 +195,23 @@ class Actor_Critic_Agent:
         advantage = T.tensor(advantage).to(self.actor.device)
         returns = T.tensor(returns).to(self.actor.device)
 
-        # Log for debugging and monitoring
+        #region Log for debugging and monitoring
         self.advantage_mean = advantage.mean().item()
         self.advantage_std = advantage.std().item()
         self.advantage_norm = advantage.mean()
         self.logger.log('advantage_mean', self.advantage_mean)
         self.logger.log('advantage_std', self.advantage_std)
         self.logger.log('advantage_norm', self.advantage_norm)
-
+        #endregion
         return advantage, returns
         
     def learn(self, next_val):
+        #region For logging
         actor_losses = []   # for logging
         critic_losses = []  # for logging
         total_losses = []   # for logging
         entropy = []        # for logging
+        #endregion
         self.learn_step += 1
         state_arr, action_arr, val_arr, reward_arr, done_arr = self.memory.get_arrays()
         
@@ -249,20 +246,18 @@ class Actor_Critic_Agent:
                 # Calculate critic loss
                 critic_loss = F.mse_loss(critic_value, batch_returns)
 
-
-                # Add entropy bonus for exploration
+                # calc entropy bonus for exploration
                 dist_entropy = dist.entropy().mean()
 
                 # Combine all losses
                 total_loss = actor_loss + self.critic_actor_ratio * critic_loss - self.entropy_coefficient * dist_entropy
 
-                # logging loss and entropy
+                #region logging loss and entropy
                 critic_losses.append(critic_loss.item())
                 actor_losses.append(actor_loss.item()) 
                 total_losses.append(total_loss.item())
                 entropy.append(dist_entropy.item())
-                
-                
+                #endregion
                 # Perform backward and optimization
                 self.actor.optimizer.zero_grad()
                 self.critic.optimizer.zero_grad()
