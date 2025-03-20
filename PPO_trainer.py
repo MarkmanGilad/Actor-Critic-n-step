@@ -42,7 +42,7 @@ class Trainer:
         self.reward = 0             # for logging
     
     def wandb_init(self, remark):
-        project_name = "AC_n_step"
+        project_name = "PPO"
         config={
                 "name": f"{project_name} {self.chkpt}",
                 "checkpoint": self.checkpoint_path,
