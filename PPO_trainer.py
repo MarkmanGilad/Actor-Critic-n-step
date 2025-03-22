@@ -3,7 +3,7 @@ import torch
 from CONSTANTS import *
 from Environment import Environment
 import numpy as np
-from Actor_Critic_Agent import Actor_Critic_Agent
+from PPO_Agent import PPO_Agent
 from Graphics import Graphics
 from collections import deque
 import os
@@ -19,7 +19,7 @@ class Trainer:
         self.logger = Logger(chkpt)
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.agent = Actor_Critic_Agent(chkpt=self.chkpt, logger = self.logger)
+        self.agent = PPO_Agent(chkpt=self.chkpt, logger = self.logger)
         self.init_params()
         self.checkpoint_path = f"Data/AC_checkpt{self.chkpt}.pth"
         self.resume_wandb = False
@@ -71,6 +71,8 @@ class Trainer:
                 "max_entropy_coeff":self.agent.max_entropy_coeff,
                 "min_entropy_coeff":self.agent.min_entropy_coeff,
                 "entropy_decay_rate":self.agent.entropy_decay_rate,
+                "GAE_lmbda": self.agent.lmbda,
+                "clip_epsilon": self.agent.clip_epsilon,
                 }
         return WandB(project_name, self.chkpt, config, self.resume_wandb)
 

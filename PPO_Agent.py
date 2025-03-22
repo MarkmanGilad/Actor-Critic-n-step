@@ -123,7 +123,7 @@ class CriticNetwork(nn.Module):
     def load_checkpoint(self):
         self.load_state_dict(T.load(self.checkpoint_file,weights_only=True))
 
-class Actor_Critic_Agent:
+class PPO_Agent:
     def __init__(self, chkpt, input_dims=88, n_actions=4, logger=None, wandb = None):
         self.gamma = 0.995
         self.n_epochs = 2
@@ -141,6 +141,7 @@ class Actor_Critic_Agent:
         self.min_entropy_coeff = 0.02
         self.entropy_decay_rate = 0.9996
         self.lmbda = 0.995
+        self.clip_epsilon = 0.2
 
         self.actor = ActorNetwork(input_dims, n_actions, self.lr_actor, chkpt=chkpt, optim_step=self.optim_step, 
                                   optim_gamma=self.optim_gamma, logger=self.logger)
@@ -199,7 +200,7 @@ class Actor_Critic_Agent:
 
         # Convert to tensors and move to the appropriate device.
         advantage = T.tensor(advantage).to(self.actor.device)
-        returns = T.tensor(returns).to(self.actor.device)
+        returns = T.tensor(returns,dtype=T.float32).to(self.actor.device)
 
         #region Logging for debugging and monitoring.
         self.advantage_mean = advantage.mean().item()
@@ -212,13 +213,14 @@ class Actor_Critic_Agent:
         return advantage, returns
         
     def learn(self, next_val):
+        #region for login
         actor_losses = []   # for logging
         critic_losses = []  # for logging
         total_losses = []   # for logging
         entropy_values = [] # for logging
         self.learn_step += 1
-
-        # Assuming memory.get_arrays() now returns old_log_probs as well.
+        #endregion
+        
         state_arr, action_arr, log_prob_arr, val_arr, reward_arr, done_arr = self.memory.get_arrays()
         
         # Skip learning if too few samples
@@ -253,7 +255,8 @@ class Actor_Critic_Agent:
                 ratio = T.exp(new_log_probs - old_log_probs)
                 # Compute the clipped objective
                 surr1 = ratio * batch_advantage
-                surr2 = T.clamp(ratio, 1 - self.clip_epsilon, 1 + self.clip_epsilon) * batch_advantage
+                surr2 = T.clamp(ratio, 1 - self.clip_epsilon, 1 + self.clip_epsilon)\
+                    * batch_advantage
                 actor_loss = -T.min(surr1, surr2).mean()
 
                 # Calculate critic loss (value function loss)
@@ -264,13 +267,14 @@ class Actor_Critic_Agent:
                 
                 # Combine losses: note that critic_actor_ratio scales the value loss,
                 # and the entropy bonus is subtracted (to maximize entropy)
-                total_loss = actor_loss + self.critic_actor_ratio * critic_loss - self.entropy_coefficient * entropy
+                total_loss = actor_loss + self.critic_actor_ratio * critic_loss \
+                    - self.entropy_coefficient * entropy
 
                 #region Logging
                 critic_losses.append(critic_loss.item())
                 actor_losses.append(actor_loss.item()) 
                 total_losses.append(total_loss.item())
-                entropy_values.append(dist_entropy.item())
+                entropy_values.append(entropy.item())
                 #endregion
                 # Perform backward pass and optimization
                 self.actor.optimizer.zero_grad()
@@ -283,7 +287,7 @@ class Actor_Critic_Agent:
         
         self.wandb(values = val_arr.mean(), returns = returns.mean(), advantage=advantage.mean(), 
                    critic_losses= stat.mean(critic_losses), actor_losses=stat.mean(actor_losses), 
-                   total_losses= stat.mean(total_losses), entropy= stat.mean(entropy))
+                   total_losses= stat.mean(total_losses), entropy= stat.mean(entropy_values))
         self.critic.scheduler.step()
         self.actor.scheduler.step()
 
