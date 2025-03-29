@@ -16,7 +16,7 @@ class Memory:
         self.rewards = []
         self.dones = []
 
-        self.batch_size = batch_size
+        self.batch_size = batch_size  # 16
 
     def generate_batches(self):
         n_states = len(self.states)
@@ -243,7 +243,7 @@ class Actor_Critic_Agent:
                 actor_loss = -(log_probs * batch_advantage).mean()
 
                 # Calculate critic loss
-                critic_loss = F.mse_loss(critic_value, batch_returns)
+                critic_loss = F.mse_loss(critic_value, batch_returns)  # TD Error (r + v(s') - V(s))^2
 
                 # calc entropy bonus for exploration
                 dist_entropy = dist.entropy().mean()
